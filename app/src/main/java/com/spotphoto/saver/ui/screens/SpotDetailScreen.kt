@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.core.content.FileProvider
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -208,31 +209,37 @@ fun SpotDetailScreen(
                 Text("Navigate Here", fontWeight = FontWeight.SemiBold)
             }
 
-            // Share button
+            // Share with photo button
+            Button(
+                onClick = {
+                    shareSpot(context, spot, category, includePhoto = true)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Icon(Icons.Default.Share, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Share with Photo", fontWeight = FontWeight.SemiBold)
+            }
+
+            // Share text-only button
             OutlinedButton(
                 onClick = {
-                    val shareText = buildString {
-                        append("${category.emoji} Photo Spot")
-                        if (spot.note.isNotBlank()) append(": ${spot.note}")
-                        append("\nCategory: ${category.label}")
-                        append("\n\nLocation: ${spot.latitude}, ${spot.longitude}")
-                        append("\nFacing: ${spot.compassBearing.toInt()}° ${spot.compassDirection}")
-                        append("\n\nGoogle Maps: https://maps.google.com/?q=${spot.latitude},${spot.longitude}")
-                    }
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                    }
-                    context.startActivity(Intent.createChooser(shareIntent, "Share Spot"))
+                    shareSpot(context, spot, category, includePhoto = false)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Default.Share, contentDescription = null)
+                Icon(Icons.Default.TextSnippet, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Share Location", fontWeight = FontWeight.SemiBold)
+                Text("Share Location Only", fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -267,5 +274,45 @@ private fun InfoRow(
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+    }
+}
+
+private fun shareSpot(
+    context: android.content.Context,
+    spot: com.spotphoto.saver.data.PhotoSpot,
+    category: com.spotphoto.saver.data.SpotCategory,
+    includePhoto: Boolean
+) {
+    val shareText = buildString {
+        append("${category.emoji} Photo Spot")
+        if (spot.note.isNotBlank()) append(": ${spot.note}")
+        append("\n\nCategory: ${category.label}")
+        append("\nLocation: ${spot.latitude}, ${spot.longitude}")
+        append("\nFacing: ${spot.compassBearing.toInt()}° ${spot.compassDirection}")
+        append("\n\nGoogle Maps: https://maps.google.com/?q=${spot.latitude},${spot.longitude}")
+    }
+
+    if (includePhoto) {
+        val photoFile = File(spot.photoPath)
+        if (photoFile.exists()) {
+            val photoUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/jpeg"
+                putExtra(Intent.EXTRA_STREAM, photoUri)
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(shareIntent, "Share Spot"))
+        }
+    } else {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Share Spot"))
     }
 }

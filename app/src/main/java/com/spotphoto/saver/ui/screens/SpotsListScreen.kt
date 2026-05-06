@@ -1,5 +1,7 @@
 package com.spotphoto.saver.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.core.content.FileProvider
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -223,17 +226,37 @@ private fun SpotCard(
                     )
                 }
 
-                // Delete button
-                IconButton(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier.size(32.dp)
+                // Action buttons
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    IconButton(
+                        onClick = {
+                            val cat = SpotCategory.fromTag(spot.category)
+                            shareSpotFromList(context, spot, cat)
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = "Share",
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }
@@ -274,4 +297,40 @@ private fun EmptyState(modifier: Modifier = Modifier, hasFilter: Boolean = false
 private fun formatTimestamp(timestamp: Long): String {
     val sdf = SimpleDateFormat("MMM dd, yyyy • h:mm a", Locale.getDefault())
     return sdf.format(Date(timestamp))
+}
+
+private fun shareSpotFromList(
+    context: android.content.Context,
+    spot: PhotoSpot,
+    category: SpotCategory
+) {
+    val shareText = buildString {
+        append("${category.emoji} Photo Spot")
+        if (spot.note.isNotBlank()) append(": ${spot.note}")
+        append("\n\nLocation: ${spot.latitude}, ${spot.longitude}")
+        append("\nFacing: ${spot.compassBearing.toInt()}° ${spot.compassDirection}")
+        append("\n\nGoogle Maps: https://maps.google.com/?q=${spot.latitude},${spot.longitude}")
+    }
+
+    val photoFile = File(spot.photoPath)
+    if (photoFile.exists()) {
+        val photoUri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            photoFile
+        )
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/jpeg"
+            putExtra(Intent.EXTRA_STREAM, photoUri)
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Share Spot"))
+    } else {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Share Spot"))
+    }
 }

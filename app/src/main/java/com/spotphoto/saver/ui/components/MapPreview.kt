@@ -13,14 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
-/**
- * Static map preview using OpenStreetMap tile server (no API key required).
- * Shows a single tile centered on the given coordinates at zoom level 15.
- */
 @Composable
 fun MapPreview(
     latitude: Double,
@@ -31,6 +29,7 @@ fun MapPreview(
 ) {
     val zoom = 15
     val tileUrl = buildStaticMapUrl(latitude, longitude, zoom)
+    val context = LocalContext.current
 
     Box(
         modifier = modifier
@@ -40,13 +39,16 @@ fun MapPreview(
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
-            model = tileUrl,
+            model = ImageRequest.Builder(context)
+                .data(tileUrl)
+                .addHeader("User-Agent", "PhotoSpotSaver/1.0 (Android; contact@spotphoto.app)")
+                .crossfade(true)
+                .build(),
             contentDescription = "Map preview",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // Pin overlay
         Icon(
             Icons.Default.Place,
             contentDescription = null,
@@ -68,6 +70,7 @@ fun MapPreviewWide(
 ) {
     val zoom = 16
     val tileUrl = buildStaticMapUrl(latitude, longitude, zoom)
+    val context = LocalContext.current
 
     Box(
         modifier = modifier
@@ -78,7 +81,11 @@ fun MapPreviewWide(
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
-            model = tileUrl,
+            model = ImageRequest.Builder(context)
+                .data(tileUrl)
+                .addHeader("User-Agent", "PhotoSpotSaver/1.0 (Android; contact@spotphoto.app)")
+                .crossfade(true)
+                .build(),
             contentDescription = "Map preview",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -96,7 +103,6 @@ fun MapPreviewWide(
 }
 
 private fun buildStaticMapUrl(lat: Double, lng: Double, zoom: Int): String {
-    // Convert lat/lng to tile numbers
     val n = 1 shl zoom
     val xTile = ((lng + 180.0) / 360.0 * n).toInt()
     val latRad = Math.toRadians(lat)

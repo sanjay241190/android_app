@@ -7,18 +7,20 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import androidx.glance.*
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.color.ColorProvider
 import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.spotphoto.saver.MainActivity
 import com.spotphoto.saver.data.PhotoSpot
 import com.spotphoto.saver.data.PhotoSpotDatabase
@@ -48,7 +50,7 @@ private fun WidgetContent(spot: PhotoSpot?) {
         modifier = GlanceModifier
             .fillMaxSize()
             .padding(12.dp)
-            .background(ColorProvider(day = android.graphics.Color.WHITE, night = android.graphics.Color.parseColor("#1E1E1E")))
+            .background(ColorProvider(day = Color.White, night = Color(0xFF1E1E1E)))
             .cornerRadius(16.dp)
             .clickable(actionStartActivity<MainActivity>()),
         contentAlignment = Alignment.Center
@@ -98,7 +100,7 @@ private fun SpotWidget(spot: PhotoSpot) {
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = ColorProvider(day = android.graphics.Color.BLACK, night = android.graphics.Color.WHITE)
+                    color = ColorProvider(day = Color.Black, night = Color.White)
                 ),
                 maxLines = 1
             )
@@ -109,7 +111,7 @@ private fun SpotWidget(spot: PhotoSpot) {
                 text = "📍 %.4f, %.4f".format(spot.latitude, spot.longitude),
                 style = TextStyle(
                     fontSize = 11.sp,
-                    color = ColorProvider(day = android.graphics.Color.GRAY, night = android.graphics.Color.LTGRAY)
+                    color = ColorProvider(day = Color.Gray, night = Color.LightGray)
                 ),
                 maxLines = 1
             )
@@ -118,7 +120,7 @@ private fun SpotWidget(spot: PhotoSpot) {
                 text = "🧭 ${spot.compassBearing.toInt()}° ${spot.compassDirection}",
                 style = TextStyle(
                     fontSize = 11.sp,
-                    color = ColorProvider(day = android.graphics.Color.GRAY, night = android.graphics.Color.LTGRAY)
+                    color = ColorProvider(day = Color.Gray, night = Color.LightGray)
                 )
             )
 
@@ -128,7 +130,7 @@ private fun SpotWidget(spot: PhotoSpot) {
                 text = timeText,
                 style = TextStyle(
                     fontSize = 10.sp,
-                    color = ColorProvider(day = android.graphics.Color.parseColor("#999999"), night = android.graphics.Color.parseColor("#888888"))
+                    color = ColorProvider(day = Color(0xFF999999), night = Color(0xFF888888))
                 )
             )
         }
@@ -138,7 +140,7 @@ private fun SpotWidget(spot: PhotoSpot) {
             modifier = GlanceModifier
                 .size(40.dp)
                 .cornerRadius(20.dp)
-                .background(ColorProvider(day = android.graphics.Color.parseColor("#1976D2"), night = android.graphics.Color.parseColor("#64B5F6")))
+                .background(ColorProvider(day = Color(0xFF1976D2), night = Color(0xFF64B5F6)))
                 .clickable(
                     actionStartActivity(
                         Intent(Intent.ACTION_VIEW).apply {
@@ -154,7 +156,7 @@ private fun SpotWidget(spot: PhotoSpot) {
                 style = TextStyle(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ColorProvider(day = android.graphics.Color.WHITE, night = android.graphics.Color.WHITE)
+                    color = ColorProvider(day = Color.White, night = Color.White)
                 )
             )
         }
@@ -176,14 +178,14 @@ private fun EmptyWidget() {
             text = "No spots saved yet",
             style = TextStyle(
                 fontSize = 13.sp,
-                color = ColorProvider(day = android.graphics.Color.GRAY, night = android.graphics.Color.LTGRAY)
+                color = ColorProvider(day = Color.Gray, night = Color.LightGray)
             )
         )
         Text(
             text = "Tap to open app",
             style = TextStyle(
                 fontSize = 11.sp,
-                color = ColorProvider(day = android.graphics.Color.parseColor("#999999"), night = android.graphics.Color.parseColor("#888888"))
+                color = ColorProvider(day = Color(0xFF999999), night = Color(0xFF888888))
             )
         )
     }
