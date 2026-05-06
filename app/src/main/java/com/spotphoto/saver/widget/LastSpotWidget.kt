@@ -1,22 +1,17 @@
 package com.spotphoto.saver.widget
 
 import android.content.Context
-import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
 import androidx.glance.*
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.action.actionStartActivity
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
-import androidx.glance.color.ColorProvider
 import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -35,36 +30,74 @@ class LastSpotWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val spot = withContext(Dispatchers.IO) {
-            PhotoSpotDatabase.getDatabase(context).photoSpotDao().getLatestSpot()
+            try {
+                PhotoSpotDatabase.getDatabase(context).photoSpotDao().getLatestSpot()
+            } catch (e: Exception) {
+                null
+            }
         }
 
+        val thumbnail: Bitmap? = if (spot != null) {
+            withContext(Dispatchers.IO) {
+                loadThumbnail(spot.photoPath, 200, 200)
+            }
+        } else null
+
         provideContent {
-            WidgetContent(spot = spot)
+            WidgetContent(spot = spot, thumbnail = thumbnail)
         }
     }
 }
 
+private fun loadThumbnail(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {
+    return try {
+        val file = File(path)
+        if (!file.exists()) return null
+
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(path, options)
+
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
+        options.inJustDecodeBounds = false
+        BitmapFactory.decodeFile(path, options)
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+    val (height, width) = options.outHeight to options.outWidth
+    var inSampleSize = 1
+    if (height > reqHeight || width > reqWidth) {
+        val halfHeight = height / 2
+        val halfWidth = width / 2
+        while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+            inSampleSize *= 2
+        }
+    }
+    return inSampleSize
+}
+
 @Composable
-private fun WidgetContent(spot: PhotoSpot?) {
+private fun WidgetContent(spot: PhotoSpot?, thumbnail: Bitmap?) {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .padding(12.dp)
-            .background(ColorProvider(day = Color.White, night = Color(0xFF1E1E1E)))
-            .cornerRadius(16.dp)
+            .background(day = android.graphics.Color.WHITE, night = android.graphics.Color.parseColor("#1E1E1E"))
             .clickable(actionStartActivity<MainActivity>()),
         contentAlignment = Alignment.Center
     ) {
         if (spot == null) {
             EmptyWidget()
         } else {
-            SpotWidget(spot)
+            SpotWidget(spot, thumbnail)
         }
     }
 }
 
 @Composable
-private fun SpotWidget(spot: PhotoSpot) {
+private fun SpotWidget(spot: PhotoSpot, thumbnail: Bitmap?) {
     val category = SpotCategory.fromTag(spot.category)
     val timeText = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault()).format(Date(spot.timestamp))
 
@@ -73,24 +106,15 @@ private fun SpotWidget(spot: PhotoSpot) {
         horizontalAlignment = Alignment.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Photo thumbnail
-        val photoFile = File(spot.photoPath)
-        if (photoFile.exists()) {
-            val bitmap = BitmapFactory.decodeFile(spot.photoPath)
-            if (bitmap != null) {
-                Image(
-                    provider = ImageProvider(bitmap),
-                    contentDescription = "Spot photo",
-                    modifier = GlanceModifier
-                        .size(80.dp)
-                        .cornerRadius(12.dp)
-                )
-            }
+        if (thumbnail != null) {
+            Image(
+                provider = ImageProvider(thumbnail),
+                contentDescription = "Spot photo",
+                modifier = GlanceModifier.size(72.dp)
+            )
+            Spacer(modifier = GlanceModifier.width(12.dp))
         }
 
-        Spacer(modifier = GlanceModifier.width(12.dp))
-
-        // Info
         Column(
             modifier = GlanceModifier.defaultWeight(),
             verticalAlignment = Alignment.CenterVertically
@@ -99,8 +123,7 @@ private fun SpotWidget(spot: PhotoSpot) {
                 text = "${category.emoji} ${spot.note.ifBlank { category.label }}",
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = ColorProvider(day = Color.Black, night = Color.White)
+                    fontSize = 14.sp
                 ),
                 maxLines = 1
             )
@@ -108,56 +131,21 @@ private fun SpotWidget(spot: PhotoSpot) {
             Spacer(modifier = GlanceModifier.height(4.dp))
 
             Text(
-                text = "📍 %.4f, %.4f".format(spot.latitude, spot.longitude),
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    color = ColorProvider(day = Color.Gray, night = Color.LightGray)
-                ),
+                text = "%.4f, %.4f".format(spot.latitude, spot.longitude),
+                style = TextStyle(fontSize = 11.sp),
                 maxLines = 1
             )
 
             Text(
-                text = "🧭 ${spot.compassBearing.toInt()}° ${spot.compassDirection}",
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    color = ColorProvider(day = Color.Gray, night = Color.LightGray)
-                )
+                text = "${spot.compassBearing.toInt()}° ${spot.compassDirection}",
+                style = TextStyle(fontSize = 11.sp)
             )
 
             Spacer(modifier = GlanceModifier.height(4.dp))
 
             Text(
                 text = timeText,
-                style = TextStyle(
-                    fontSize = 10.sp,
-                    color = ColorProvider(day = Color(0xFF999999), night = Color(0xFF888888))
-                )
-            )
-        }
-
-        // Navigate button
-        Box(
-            modifier = GlanceModifier
-                .size(40.dp)
-                .cornerRadius(20.dp)
-                .background(ColorProvider(day = Color(0xFF1976D2), night = Color(0xFF64B5F6)))
-                .clickable(
-                    actionStartActivity(
-                        Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse("google.navigation:q=${spot.latitude},${spot.longitude}")
-                            setPackage("com.google.android.apps.maps")
-                        }
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "→",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ColorProvider(day = Color.White, night = Color.White)
-                )
+                style = TextStyle(fontSize = 10.sp)
             )
         }
     }
@@ -170,23 +158,20 @@ private fun EmptyWidget() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "📷",
-            style = TextStyle(fontSize = 28.sp)
+            text = "Photo Spot Saver",
+            style = TextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
         )
         Spacer(modifier = GlanceModifier.height(8.dp))
         Text(
             text = "No spots saved yet",
-            style = TextStyle(
-                fontSize = 13.sp,
-                color = ColorProvider(day = Color.Gray, night = Color.LightGray)
-            )
+            style = TextStyle(fontSize = 12.sp)
         )
         Text(
             text = "Tap to open app",
-            style = TextStyle(
-                fontSize = 11.sp,
-                color = ColorProvider(day = Color(0xFF999999), night = Color(0xFF888888))
-            )
+            style = TextStyle(fontSize = 11.sp)
         )
     }
 }
