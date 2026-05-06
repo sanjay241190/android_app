@@ -82,11 +82,7 @@ dependencies {
     // Accompanist permissions
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
-    // Glance (App Widget with Compose)
-    implementation("androidx.glance:glance-appwidget:1.0.0")
-    implementation("androidx.glance:glance-material3:1.0.0")
-
-    // WorkManager (for widget updates)
+    // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Core
