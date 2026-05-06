@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Photo Spot Saver</string>
+    <string name="widget_description">Shows your last saved photo spot with location info</string>
+</resources>
