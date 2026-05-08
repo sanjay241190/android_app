@@ -139,6 +139,8 @@ fun RiffNavHost(
             val bpm by recordingViewModel.detectedBpm.collectAsState()
             val durationMs by recordingViewModel.melodyDurationMs.collectAsState()
             val abcNotation by recordingViewModel.abcNotation.collectAsState()
+            val generatedVariations by recordingViewModel.generatedVariations.collectAsState()
+            val error by recordingViewModel.error.collectAsState()
 
             AnalysisScreen(
                 isAnalyzing = isAnalyzing,
@@ -147,6 +149,8 @@ fun RiffNavHost(
                 bpm = bpm,
                 durationMs = durationMs,
                 abcNotation = abcNotation,
+                variationCount = generatedVariations.size,
+                error = error,
                 onViewVariations = {
                     variationsViewModel.loadFromRecording(recordingViewModel)
                     navController.navigate(Routes.VARIATIONS)

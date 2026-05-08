@@ -1,5 +1,6 @@
 package com.riffstealer.app.ai
 
+import android.util.Log
 import com.riffstealer.app.music.AbcParser
 import com.riffstealer.app.music.Variation
 
@@ -8,23 +9,31 @@ class VariationGenerator(private val apiClient: GeminiApiClient) {
     private val abcParser = AbcParser()
 
     suspend fun generateVariations(abcNotation: String, bpm: Int): Result<List<Variation>> {
+        Log.d("VariationGenerator", "Starting generation with ABC: $abcNotation, BPM: $bpm")
         val prompt = buildPrompt(abcNotation, bpm)
         val response = apiClient.sendMessage(prompt)
 
         return response.fold(
             onSuccess = { text ->
+                Log.d("VariationGenerator", "API response received (${text.length} chars)")
                 try {
                     val variations = parseVariations(text)
+                    Log.d("VariationGenerator", "Parsed ${variations.size} variations")
                     if (variations.isEmpty()) {
-                        Result.failure(Exception("No valid variations could be parsed from the response"))
+                        Log.w("VariationGenerator", "No variations parsed. Raw response:\n${text.take(500)}")
+                        Result.failure(Exception("AI returned a response but no valid variations could be parsed. Please try again."))
                     } else {
                         Result.success(variations)
                     }
                 } catch (e: Exception) {
+                    Log.e("VariationGenerator", "Parse error: ${e.message}")
                     Result.failure(Exception("Failed to parse variations: ${e.message}"))
                 }
             },
-            onFailure = { Result.failure(it) }
+            onFailure = { error ->
+                Log.e("VariationGenerator", "API call failed: ${error.message}")
+                Result.failure(error)
+            }
         )
     }
 

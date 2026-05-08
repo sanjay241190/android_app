@@ -1,5 +1,6 @@
 package com.riffstealer.app.ai
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -31,9 +32,11 @@ class GeminiApiClient(private var apiKey: String = "") {
 
     suspend fun sendMessage(prompt: String): Result<String> = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) {
+            Log.e("GeminiApiClient", "API key is blank")
             return@withContext Result.failure(IllegalStateException("API key not set"))
         }
 
+        Log.d("GeminiApiClient", "Sending request to Gemini API (key length: ${apiKey.length})")
         try {
             val parts = JSONArray().apply {
                 put(JSONObject().apply {
@@ -68,6 +71,7 @@ class GeminiApiClient(private var apiKey: String = "") {
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string() ?: ""
 
+            Log.d("GeminiApiClient", "Response code: ${response.code}")
             if (!response.isSuccessful) {
                 val errorMsg = try {
                     val errorJson = JSONObject(responseBody)
@@ -76,6 +80,7 @@ class GeminiApiClient(private var apiKey: String = "") {
                 } catch (e: Exception) {
                     "API error: ${response.code}"
                 }
+                Log.e("GeminiApiClient", "API error: $errorMsg")
                 return@withContext Result.failure(Exception(errorMsg))
             }
 
@@ -88,6 +93,7 @@ class GeminiApiClient(private var apiKey: String = "") {
 
             Result.success(text)
         } catch (e: Exception) {
+            Log.e("GeminiApiClient", "Exception: ${e.message}", e)
             Result.failure(e)
         }
     }

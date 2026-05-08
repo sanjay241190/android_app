@@ -1,9 +1,12 @@
 package com.riffstealer.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -101,28 +104,52 @@ fun VariationsScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            itemsIndexed(variations) { index, variation ->
-                VariationCard(
-                    genre = variation.genre,
-                    mood = variation.mood,
-                    tempo = variation.tempo,
-                    description = variation.description,
-                    isFavorite = variation.isFavorite,
-                    isPlaying = currentlyPlayingIndex == index,
-                    onPlayClick = { onPlayVariation(index) },
-                    onFavoriteClick = { onFavoriteVariation(index) },
-                    onClick = { onVariationClick(index) }
-                )
+        if (variations.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "No variations yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Check your Gemini API key in Settings\nand try recording again",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                itemsIndexed(variations) { index, variation ->
+                    VariationCard(
+                        genre = variation.genre,
+                        mood = variation.mood,
+                        tempo = variation.tempo,
+                        description = variation.description,
+                        isFavorite = variation.isFavorite,
+                        isPlaying = currentlyPlayingIndex == index,
+                        onPlayClick = { onPlayVariation(index) },
+                        onFavoriteClick = { onFavoriteVariation(index) },
+                        onClick = { onVariationClick(index) }
+                    )
+                }
 
-            item { Spacer(modifier = Modifier.padding(bottom = 16.dp)) }
+                item { Spacer(modifier = Modifier.padding(bottom = 16.dp)) }
+            }
         }
     }
 }

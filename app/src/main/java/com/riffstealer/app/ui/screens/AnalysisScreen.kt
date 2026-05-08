@@ -49,6 +49,8 @@ fun AnalysisScreen(
     bpm: Int,
     durationMs: Long,
     abcNotation: String,
+    variationCount: Int,
+    error: String?,
     onViewVariations: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -83,6 +85,8 @@ fun AnalysisScreen(
                 bpm = bpm,
                 durationMs = durationMs,
                 abcNotation = abcNotation,
+                variationCount = variationCount,
+                error = error,
                 onViewVariations = onViewVariations,
                 modifier = Modifier
                     .fillMaxSize()
@@ -138,6 +142,8 @@ private fun AnalysisResults(
     bpm: Int,
     durationMs: Long,
     abcNotation: String,
+    variationCount: Int,
+    error: String?,
     onViewVariations: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -234,10 +240,27 @@ private fun AnalysisResults(
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (error != null) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.errorContainer
+            ) {
+                Text(
+                    text = "Generation failed: $error",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         Button(
             onClick = onViewVariations,
+            enabled = variationCount > 0,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -247,7 +270,7 @@ private fun AnalysisResults(
             )
         ) {
             Text(
-                text = "View Variations",
+                text = if (variationCount > 0) "View Variations ($variationCount)" else "No Variations Generated",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold
                 )
