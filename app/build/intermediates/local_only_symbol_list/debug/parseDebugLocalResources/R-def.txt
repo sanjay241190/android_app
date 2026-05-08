@@ -4,6 +4,7 @@ color black
 color white
 drawable ic_launcher_background
 drawable ic_launcher_foreground
+drawable watermark_bg
 mipmap ic_launcher
 mipmap ic_launcher_round
 string analyzing
