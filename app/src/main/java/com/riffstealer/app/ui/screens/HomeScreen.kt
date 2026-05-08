@@ -1,11 +1,11 @@
 package com.riffstealer.app.ui.screens
 
+import android.graphics.BitmapFactory
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +39,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -47,7 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.riffstealer.app.R
 
 @Composable
 fun HomeScreen(
@@ -55,6 +53,17 @@ fun HomeScreen(
     onNavigateToLibrary: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
+    val context = LocalContext.current
+    val watermarkBitmap = remember {
+        try {
+            context.assets.open("watermark.jpg").use { stream ->
+                BitmapFactory.decodeStream(stream)?.asImageBitmap()
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     Scaffold(
         bottomBar = {
             NavigationBar(
@@ -86,39 +95,21 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            val context = LocalContext.current
-            val watermarkBitmap = remember {
-                try {
-                    val inputStream = context.resources.openRawResource(R.drawable.watermark_bg)
-                    BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
-                } catch (e: Exception) {
-                    null
-                }
-            }
-
             if (watermarkBitmap != null) {
                 Image(
                     bitmap = watermarkBitmap,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(0.10f),
+                        .alpha(0.12f),
                     contentScale = ContentScale.Crop
                 )
             }
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.85f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                            )
-                        )
-                    ),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
