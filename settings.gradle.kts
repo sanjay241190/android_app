@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PhotoSpotSaver"
+rootProject.name = "RiffStealer"
 include(":app")
