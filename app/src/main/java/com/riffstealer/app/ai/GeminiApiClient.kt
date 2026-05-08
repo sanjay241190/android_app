@@ -15,7 +15,7 @@ class GeminiApiClient(private var apiKey: String = "") {
 
     companion object {
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-        private const val MODEL = "gemini-2.0-flash"
+        private const val MODEL = "gemini-1.5-flash"
     }
 
     private val client = OkHttpClient.Builder()
