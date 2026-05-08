@@ -4,7 +4,7 @@
             "outputFile": "com.riffstealer.app-mergeDebugResources-54:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\sanjaykumar2\\.gradle\\caches\\transforms-4\\6564e6aa472561fa58700b3c121e1a6e\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\sanjaykumar2\\.gradle\\caches\\8.13\\transforms\\b2bb6262fa9cbd433d97d280a7a57e84\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
