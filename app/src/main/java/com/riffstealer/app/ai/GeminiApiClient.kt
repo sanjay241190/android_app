@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 class GeminiApiClient(private var apiKey: String = "") {
 
     companion object {
-        private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+        private const val BASE_URL = "https://generativelanguage.googleapis.com/v1/models"
         private const val MODEL = "gemini-1.5-flash"
     }
 
