@@ -2,6 +2,10 @@ R_DEF: Internal format may change without notice
 local
 color black
 color white
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+mipmap ic_launcher
+mipmap ic_launcher_round
 string analyzing
 string api_key_hint
 string api_key_label
