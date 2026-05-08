@@ -1,8 +1,23 @@
 package com.riffstealer.app.navigation
 
+import android.Manifest
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -10,6 +25,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.riffstealer.app.ui.screens.*
 import com.riffstealer.app.viewmodel.LibraryViewModel
 import com.riffstealer.app.viewmodel.RecordingViewModel
@@ -41,7 +59,6 @@ fun RiffNavHost(
         composable(Routes.HOME) {
             HomeScreen(
                 onStartRecording = {
-                    recordingViewModel.startRecording()
                     navController.navigate(Routes.RECORDING)
                 },
                 onNavigateToLibrary = {
@@ -58,21 +75,61 @@ fun RiffNavHost(
         }
 
         composable(Routes.RECORDING) {
-            val amplitudes by recordingViewModel.amplitudes.collectAsState()
-            val detectedNotes by recordingViewModel.detectedNoteNames.collectAsState()
-            val elapsedMs by recordingViewModel.elapsedMs.collectAsState()
+            val micPermission = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
-            RecordingScreen(
-                amplitudes = amplitudes,
-                detectedNotes = detectedNotes,
-                elapsedMs = elapsedMs,
-                onStopRecording = {
-                    recordingViewModel.stopRecording()
-                    navController.navigate(Routes.ANALYSIS) {
-                        popUpTo(Routes.HOME)
+            if (micPermission.status.isGranted) {
+                LaunchedEffect(Unit) {
+                    recordingViewModel.startRecording()
+                }
+
+                val amplitudes by recordingViewModel.amplitudes.collectAsState()
+                val detectedNotes by recordingViewModel.detectedNoteNames.collectAsState()
+                val elapsedMs by recordingViewModel.elapsedMs.collectAsState()
+
+                RecordingScreen(
+                    amplitudes = amplitudes,
+                    detectedNotes = detectedNotes,
+                    elapsedMs = elapsedMs,
+                    onStopRecording = {
+                        recordingViewModel.stopRecording()
+                        navController.navigate(Routes.ANALYSIS) {
+                            popUpTo(Routes.HOME)
+                        }
+                    }
+                )
+            } else {
+                LaunchedEffect(Unit) {
+                    micPermission.launchPermissionRequest()
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Microphone Access Required",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (micPermission.status.shouldShowRationale)
+                            "RiffStealer needs microphone access to capture your melodies. Please grant the permission."
+                        else
+                            "Please grant microphone permission to start recording.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(onClick = { micPermission.launchPermissionRequest() }) {
+                        Text("Grant Permission")
                     }
                 }
-            )
+            }
         }
 
         composable(Routes.ANALYSIS) {
