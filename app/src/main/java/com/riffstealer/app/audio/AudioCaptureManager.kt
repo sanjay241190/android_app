@@ -61,13 +61,10 @@ class AudioCaptureManager {
         audioRecord = null
     }
 
-    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     suspend fun captureAudioStream(
         onBuffer: (ShortArray, Int) -> Unit
     ) = withContext(Dispatchers.IO) {
-        if (!_isRecording.value) {
-            startRecording()
-        }
+        if (!_isRecording.value) return@withContext
 
         val buffer = ShortArray(bufferSize / 2)
 

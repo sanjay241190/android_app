@@ -88,6 +88,8 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording() {
+        if (audioCaptureManager.isRecording.value) return
+
         pitchBuffer.clear()
         _detectedNoteNames.value = emptyList()
         _elapsedMs.value = 0L
@@ -96,6 +98,10 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
         _abcNotation.value = ""
         _generatedVariations.value = emptyList()
         _error.value = null
+
+        val started = audioCaptureManager.startRecording()
+        if (!started) return
+
         recordingStartMs = System.currentTimeMillis()
 
         timerJob = viewModelScope.launch {
@@ -106,29 +112,32 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         recordingJob = viewModelScope.launch(Dispatchers.Default) {
-            audioCaptureManager.captureAudioStream { buffer, size ->
-                val result = pitchDetector.detectPitch(buffer, size)
-                val timestampMs = System.currentTimeMillis() - recordingStartMs
+            val buffer = ShortArray(audioCaptureManager.bufferSize / 2)
+            while (isActive && audioCaptureManager.isRecording.value) {
+                audioCaptureManager.captureAudioStream { readBuffer, size ->
+                    val result = pitchDetector.detectPitch(readBuffer, size)
+                    val timestampMs = System.currentTimeMillis() - recordingStartMs
 
-                pitchBuffer.add(
-                    RhythmAnalyzer.TimedPitch(
-                        frequency = result.frequency,
-                        confidence = result.confidence,
-                        timestampMs = timestampMs,
-                        isPitched = result.isPitched
+                    pitchBuffer.add(
+                        RhythmAnalyzer.TimedPitch(
+                            frequency = result.frequency,
+                            confidence = result.confidence,
+                            timestampMs = timestampMs,
+                            isPitched = result.isPitched
+                        )
                     )
-                )
 
-                if (result.isPitched && result.confidence > 0.5f) {
-                    val note = com.riffstealer.app.music.Note.fromFrequency(result.frequency, 0)
-                    val currentNames = _detectedNoteNames.value.toMutableList()
-                    val fullName = note.fullName
-                    if (currentNames.lastOrNull() != fullName) {
-                        currentNames.add(fullName)
-                        if (currentNames.size > 50) {
-                            currentNames.removeAt(0)
+                    if (result.isPitched && result.confidence > 0.5f) {
+                        val note = com.riffstealer.app.music.Note.fromFrequency(result.frequency, 0)
+                        val currentNames = _detectedNoteNames.value.toMutableList()
+                        val fullName = note.fullName
+                        if (currentNames.lastOrNull() != fullName) {
+                            currentNames.add(fullName)
+                            if (currentNames.size > 50) {
+                                currentNames.removeAt(0)
+                            }
+                            _detectedNoteNames.value = currentNames
                         }
-                        _detectedNoteNames.value = currentNames
                     }
                 }
             }
