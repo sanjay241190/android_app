@@ -1,4 +1,0 @@
-com.riffstealer.app.test.app-androidTest-0 C:\Users\sanjaykumar2\Desktop\Work\Andorid\android_app\app\build\generated\res\resValues\androidTest\debug
-com.riffstealer.app.test.app-mergeDebugAndroidTestResources-1 C:\Users\sanjaykumar2\Desktop\Work\Andorid\android_app\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
-com.riffstealer.app.test.app-mergeDebugAndroidTestResources-2 C:\Users\sanjaykumar2\Desktop\Work\Andorid\android_app\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
-com.riffstealer.app.test.app-merged_res-3 C:\Users\sanjaykumar2\Desktop\Work\Andorid\android_app\app\build\intermediates\merged_res\debugAndroidTest
